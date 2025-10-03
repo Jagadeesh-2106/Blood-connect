@@ -1,7 +1,8 @@
 // Notification service for handling blood donation alerts
 
 import { toast } from "sonner@2.0.3";
-import { projectId } from './supabase/info';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
 export interface NotificationData {
   id: string;
@@ -40,7 +41,7 @@ class NotificationService {
   private audioContext: AudioContext | null = null;
 
   constructor() {
-    this.baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-206208a7`;
+    this.baseUrl = `${supabaseUrl}/functions/v1/make-server-206208a7`;
     this.setupAudioContext();
   }
 

@@ -1,17 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { projectId, publicAnonKey } from './info';
 
-// Export keys for use in other components
-export { projectId, publicAnonKey };
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Create a single supabase client for interacting with your database
-export const supabase = createClient(
-  `https://${projectId}.supabase.co`,
-  publicAnonKey
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // API base URL for our server functions
-export const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-206208a7`;
+export const API_BASE_URL = `${supabaseUrl}/functions/v1/make-server-206208a7`;
 
 // Helper function to make authenticated API calls
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
