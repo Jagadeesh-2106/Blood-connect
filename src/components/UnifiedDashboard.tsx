@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -24,23 +23,22 @@ import {
   ChevronRight,
   AlertCircle
 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 
 interface UnifiedDashboardProps {
   onSignOut: () => void;
-  onNavigateToHome: () => void;
-  onNavigateToDonorDashboard: () => void;
-  onNavigateToPatientDashboard: () => void;
-  onNavigateToHospitalDirectory?: () => void;
 }
 
-export function UnifiedDashboard({ onSignOut, onNavigateToHome, onNavigateToDonorDashboard, onNavigateToPatientDashboard, onNavigateToHospitalDirectory }: UnifiedDashboardProps) {
+export function UnifiedDashboard({ onSignOut }: UnifiedDashboardProps) {
+  const navigate = useNavigate();
+
   // Handle action selection and navigate to appropriate dashboard
   const handleActionSelect = (action: 'donate' | 'request') => {
     if (action === 'donate') {
-      onNavigateToDonorDashboard();
+      navigate('/donor-dashboard');
     } else {
-      onNavigateToPatientDashboard();
+      navigate('/patient-dashboard');
     }
   };
 
@@ -52,10 +50,10 @@ export function UnifiedDashboard({ onSignOut, onNavigateToHome, onNavigateToDono
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex items-center">
+            <Link to="/" className="flex items-center">
               <Heart className="w-8 h-8 text-red-600 mr-2" />
               <span className="text-xl font-bold text-gray-900">BloodConnect</span>
-            </div>
+            </Link>
 
             {/* Navigation */}
             <div className="flex items-center space-x-4">
@@ -188,16 +186,14 @@ export function UnifiedDashboard({ onSignOut, onNavigateToHome, onNavigateToDono
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button 
-                variant="outline" 
-                className="h-auto p-4 flex flex-col items-center space-y-2 hover:bg-blue-50 border-blue-200"
-                onClick={onNavigateToHospitalDirectory}
-              >
-                <Building2 className="w-8 h-8 text-blue-600" />
-                <div className="text-center">
-                  <div className="font-medium">Hospital Directory</div>
-                  <div className="text-xs text-gray-500">Find hospitals & blood banks</div>
-                </div>
+              <Button asChild variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2 hover:bg-blue-50 border-blue-200">
+                <Link to="/hospital-directory">
+                  <Building2 className="w-8 h-8 text-blue-600" />
+                  <div className="text-center">
+                    <div className="font-medium">Hospital Directory</div>
+                    <div className="text-xs text-gray-500">Find hospitals & blood banks</div>
+                  </div>
+                </Link>
               </Button>
               
               <Button 

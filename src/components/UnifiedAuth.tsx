@@ -12,9 +12,9 @@ import { PasswordReset } from "./PasswordReset";
 import { ConnectivityDiagnostic } from "./ConnectivityDiagnostic";
 import { auth } from "../utils/supabase/client";
 import { toast } from "sonner@2.0.3";
+import { Link } from "react-router-dom";
 
 interface UnifiedAuthProps {
-  onNavigateToHome: () => void;
   onAuthSuccess: () => void;
 }
 
@@ -30,7 +30,7 @@ const indianStates = [
   "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir", "Ladakh"
 ];
 
-export function UnifiedAuth({ onNavigateToHome, onAuthSuccess }: UnifiedAuthProps) {
+export function UnifiedAuth({ onAuthSuccess }: UnifiedAuthProps) {
   const [currentStep, setCurrentStep] = useState<AuthStep>('main');
   const [activeTab, setActiveTab] = useState("signin");
   // Removed pendingRegistrationData as email verification is no longer needed
@@ -158,7 +158,7 @@ export function UnifiedAuth({ onNavigateToHome, onAuthSuccess }: UnifiedAuthProp
            /[A-Z]/.test(password) &&
            /[a-z]/.test(password) &&
            /\d/.test(password) &&
-           /[!@#$%^&*(),.?\":{}|<>]/.test(password);
+           /[!@#$%^&*(),.?":{}|<>]/.test(password);
   };
 
   const getPasswordStrengthColor = (password: string): string => {
@@ -508,14 +508,10 @@ export function UnifiedAuth({ onNavigateToHome, onAuthSuccess }: UnifiedAuthProp
       <div className="w-full max-w-md">
         {/* Back to Home Button */}
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={onNavigateToHome}
-            className="text-gray-600 hover:text-gray-900 p-0 h-auto"
-          >
+          <Link to="/" className="text-gray-600 hover:text-gray-900 p-0 h-auto inline-flex items-center">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
-          </Button>
+          </Link>
         </div>
 
         <Card className="shadow-2xl border-0">
@@ -935,7 +931,7 @@ export function UnifiedAuth({ onNavigateToHome, onAuthSuccess }: UnifiedAuthProp
                           <div className="mt-2">
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-xs text-gray-600">Password strength</span>
-                              <span className={`text-xs ${
+                              <span className={`text-xs ${ 
                                 getPasswordStrengthColor(registerForm.password) === 'bg-green-400' 
                                   ? 'text-green-600' 
                                   : getPasswordStrengthColor(registerForm.password) === 'bg-yellow-400'

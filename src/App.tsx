@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { Heart, Loader2 } from "lucide-react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PerformanceOptimizer } from "./components/PerformanceOptimizer";
@@ -17,11 +18,12 @@ const CallToAction = lazy(() => import("./components/CallToAction").then(m => ({
 const UnifiedAuth = lazy(() => import("./components/UnifiedAuth").then(m => ({ default: m.UnifiedAuth })));
 const UnifiedDashboard = lazy(() => import("./components/UnifiedDashboard").then(m => ({ default: m.UnifiedDashboard })));
 const Dashboard = lazy(() => import("./components/Dashboard").then(m => ({ default: m.Dashboard })));
-// BloodBanks component removed from landing page
 const HowItWorksPage = lazy(() => import("./components/HowItWorksPage").then(m => ({ default: m.HowItWorksPage })));
 const FindDonorsPage = lazy(() => import("./components/FindDonorsPage").then(m => ({ default: m.FindDonorsPage })));
 const AboutPage = lazy(() => import("./components/AboutPage").then(m => ({ default: m.AboutPage })));
 const ProfileCompletionWizard = lazy(() => import("./components/ProfileCompletionWizard").then(m => ({ default: m.ProfileCompletionWizard })));
+const HospitalBloodBankDirectory = lazy(() => import("./components/HospitalBloodBankDirectory").then(m => ({ default: m.HospitalBloodBankDirectory })));
+
 
 // Loading component
 const LoadingSpinner = () => (
@@ -37,80 +39,60 @@ const LoadingSpinner = () => (
   </div>
 );
 
-export default function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'auth' | 'dashboard' | 'donor-dashboard' | 'patient-dashboard' | 'how-it-works' | 'find-donors' | 'about' | 'profile-wizard'>('home');
+const AppContent = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isCheckingSession, setIsCheckingSession] = useState(true);
-  const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
-  const [pendingUserEmail, setPendingUserEmail] = useState<string>(''); // For profile completion
+  const [pendingUserEmail, setPendingUserEmail] = useState<string>('');
 
-  // Emergency timeout to prevent infinite loading
   useEffect(() => {
     const emergencyTimeout = setTimeout(() => {
       console.debug('✅ App initialization timeout reached - ensuring app loads');
       setIsCheckingSession(false);
-    }, 5000); // 5 second emergency fallback
+    }, 5000);
 
     return () => clearTimeout(emergencyTimeout);
   }, []);
 
-  const handleNavigateToAuth = () => {
-    setCurrentPage('auth');
-  };
-
-  const handleNavigateToHome = () => {
-    setCurrentPage('home');
-  };
-
-  // Setup demo data and check for stored session on app load
   useEffect(() => {
     const checkStoredSession = async () => {
       try {
-        // Check demo session first (no network required)
         const demoSession = localStorage.getItem('demo_session');
         const demoProfile = localStorage.getItem('demo_profile');
-        
+
         if (demoSession && demoProfile) {
           console.log('🎯 Found demo session, restoring...');
-          setCurrentPage('dashboard');
+          navigate('/dashboard');
           setIsCheckingSession(false);
           return;
         }
-        
-        // If we have a demo session but no profile, try to restore it
+
         if (demoSession && !demoProfile) {
           console.log('🔧 Demo session found but no profile, attempting restoration...');
           try {
             const session = JSON.parse(demoSession);
             const email = session.user?.email;
-            
-            // Import demo users data
             const { DEMO_USERS } = await import('./utils/supabase/client');
-            
             if (email && email in DEMO_USERS) {
               const profile = DEMO_USERS[email as keyof typeof DEMO_USERS].profile;
               localStorage.setItem('demo_profile', JSON.stringify(profile));
               console.log('✅ Demo profile restored, proceeding to dashboard');
-              setCurrentPage('dashboard');
+              navigate('/dashboard');
               setIsCheckingSession(false);
               return;
             }
           } catch (error) {
             console.warn('Failed to restore demo profile:', error);
-            // Clean up corrupted demo session
             localStorage.removeItem('demo_session');
           }
         }
 
-        // Check regular session only if stay logged in is enabled
         const stayLoggedIn = localStorage.getItem('bloodconnect_stay_logged_in');
-        
         if (stayLoggedIn === 'true') {
           try {
-            // Reduced timeout to prevent hanging
             const sessionCheckPromise = (async () => {
               const { auth, profile } = await import('./utils/supabase/client');
               const session = await auth.getSession();
-              
               if (session?.access_token) {
                 const { profile: userProfile } = await profile.get();
                 if (userProfile?.role) {
@@ -120,19 +102,17 @@ export default function App() {
               return { success: false };
             })();
 
-            // Reduced timeout to 2 seconds
-            const timeoutPromise = new Promise((_, reject) => 
+            const timeoutPromise = new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Session check timeout')), 2000)
             );
 
             const result = await Promise.race([sessionCheckPromise, timeoutPromise]);
-            
+
             if (result.success) {
-              setCurrentPage('dashboard');
+              navigate('/dashboard');
               console.log('Auto-login successful');
             }
           } catch (error) {
-            // Network error or session expired - clear regular session data
             localStorage.removeItem('bloodconnect_stay_logged_in');
             localStorage.removeItem('bloodconnect_session_token');
             console.debug('Session check failed:', error);
@@ -145,7 +125,6 @@ export default function App() {
       }
     };
 
-    // Reduced fallback timeout to 3 seconds maximum
     const fallbackTimeout = setTimeout(() => {
       console.debug('Session check fallback timeout reached');
       setIsCheckingSession(false);
@@ -158,104 +137,49 @@ export default function App() {
     return () => {
       clearTimeout(fallbackTimeout);
     };
-  }, []);
-
-
-
-  // handleNavigateToBloodBanks removed as blood banks navigation is no longer needed
-
-
-
-  const handleNavigateToHowItWorks = () => {
-    setCurrentPage('how-it-works');
-  };
-
-  const handleNavigateToFindDonors = () => {
-    setCurrentPage('find-donors');
-  };
-
-  const handleNavigateToAbout = () => {
-    setCurrentPage('about');
-  };
+  }, [navigate]);
 
   const handleAuthSuccess = () => {
-    // Check if user needs to complete profile (for demo, we'll assume new users do)
     const demoProfile = localStorage.getItem('demo_profile');
     if (demoProfile) {
       const profile = JSON.parse(demoProfile);
       setPendingUserEmail(profile.email);
-      
-      // Check if profile is complete (demo logic)
       const isProfileComplete = localStorage.getItem(`profile_complete_${profile.email}`);
       if (!isProfileComplete) {
-        setCurrentPage('profile-wizard');
+        navigate('/profile-wizard');
         return;
       }
     }
-    
-    setCurrentPage('dashboard');
-    setNavigationHistory(['dashboard']);
-  };
-
-  const handleNavigateToDonorDashboard = () => {
-    setNavigationHistory(prev => [...prev, 'donor-dashboard']);
-    setCurrentPage('donor-dashboard');
-  };
-
-  const handleNavigateToPatientDashboard = () => {
-    setNavigationHistory(prev => [...prev, 'patient-dashboard']);
-    setCurrentPage('patient-dashboard');
-  };
-
-  const handleNavigateBack = () => {
-    if (navigationHistory.length > 1) {
-      const newHistory = [...navigationHistory];
-      newHistory.pop(); // Remove current page
-      const previousPage = newHistory[newHistory.length - 1];
-      setNavigationHistory(newHistory);
-      setCurrentPage(previousPage as any);
-    } else {
-      // Default back to dashboard if no history
-      setCurrentPage('dashboard');
-      setNavigationHistory(['dashboard']);
-    }
+    navigate('/dashboard');
   };
 
   const handleProfileComplete = (profileData: any) => {
     console.log('Profile completed:', profileData);
-    
-    // Mark profile as complete for this user
     localStorage.setItem(`profile_complete_${profileData.email}`, 'true');
     localStorage.setItem(`profile_data_${profileData.email}`, JSON.stringify(profileData));
-    
-    setCurrentPage('dashboard');
-    setNavigationHistory(['dashboard']);
+    navigate('/dashboard');
   };
 
   const handleProfileSkip = () => {
-    // Allow skipping profile completion but mark as skipped
     localStorage.setItem(`profile_skipped_${pendingUserEmail}`, 'true');
-    setCurrentPage('dashboard');
-    setNavigationHistory(['dashboard']);
+    navigate('/dashboard');
   };
 
   const handleSignOut = async () => {
-    // Clear session data immediately to prevent UI delays
     localStorage.removeItem('bloodconnect_stay_logged_in');
     localStorage.removeItem('bloodconnect_session_token');
     localStorage.removeItem('demo_session');
     localStorage.removeItem('demo_profile');
     setPendingUserEmail('');
-    setCurrentPage('home');
+    navigate('/');
 
-    // Try to sign out from Supabase in background with shorter timeout
     try {
       const signOutPromise = (async () => {
         const { auth } = await import('./utils/supabase/client');
         await auth.signOut();
       })();
 
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('SignOut timeout')), 1000)
       );
 
@@ -265,87 +189,56 @@ export default function App() {
     }
   };
 
-  // Show loading screen while checking for stored session
   if (isCheckingSession) {
     return <LoadingSpinner />;
   }
+
+  const MainLayout = ({ children }: { children: React.ReactNode }) => (
+    <>
+      <Header />
+      {children}
+      <Footer />
+    </>
+  );
 
   return (
     <ErrorBoundary>
       <PerformanceOptimizer />
       <div className="min-h-screen bg-white">
         <Suspense fallback={<LoadingSpinner />}>
-          {currentPage === 'profile-wizard' ? (
-            <ProfileCompletionWizard
-              onComplete={handleProfileComplete}
-              onSkip={handleProfileSkip}
-              userEmail={pendingUserEmail}
-            />
-          ) : currentPage === 'dashboard' ? (
-            <UnifiedDashboard 
-              onSignOut={handleSignOut} 
-              onNavigateToHome={handleNavigateToHome}
-              onNavigateToDonorDashboard={handleNavigateToDonorDashboard}
-              onNavigateToPatientDashboard={handleNavigateToPatientDashboard}
-            />
-          ) : currentPage === 'donor-dashboard' ? (
-            <Dashboard 
-              userRole="donor"
-              onSignOut={handleSignOut} 
-              onNavigateToHome={handleNavigateBack}
-            />
-          ) : currentPage === 'patient-dashboard' ? (
-            <Dashboard 
-              userRole="patient"
-              onSignOut={handleSignOut} 
-              onNavigateToHome={handleNavigateBack}
-            />
-          ) : currentPage === 'auth' ? (
-            <UnifiedAuth 
-              onNavigateToHome={handleNavigateToHome} 
-              onAuthSuccess={handleAuthSuccess}
-            />
-          ) : (currentPage === 'how-it-works' || currentPage === 'find-donors' || currentPage === 'about') ? (
-            <>
-              <Header 
-                onNavigateToRegister={handleNavigateToAuth} 
-                onNavigateToHome={handleNavigateToHome}
-                onNavigateToSignIn={handleNavigateToAuth}
-                onNavigateToHowItWorks={handleNavigateToHowItWorks}
-                onNavigateToFindDonors={handleNavigateToFindDonors}
-                onNavigateToAbout={handleNavigateToAbout}
-              />
-              {currentPage === 'how-it-works' && <HowItWorksPage />}
-              {currentPage === 'find-donors' && <FindDonorsPage />}
-              {currentPage === 'about' && <AboutPage />}
-              <Footer />
-            </>
-          ) : (
-            <>
-              <Header 
-                onNavigateToRegister={handleNavigateToAuth} 
-                onNavigateToHome={handleNavigateToHome}
-                onNavigateToSignIn={handleNavigateToAuth}
-                onNavigateToHowItWorks={handleNavigateToHowItWorks}
-                onNavigateToFindDonors={handleNavigateToFindDonors}
-                onNavigateToAbout={handleNavigateToAbout}
-              />
-              <main>
-                <Hero 
-                  onNavigateToRegister={handleNavigateToAuth} 
-                  onNavigateToSignIn={handleNavigateToAuth}
-                />
-                <Features />
-                <HowItWorks />
-                <Statistics />
-                <CallToAction onNavigateToRegister={handleNavigateToAuth} />
-              </main>
-              <Footer />
-            </>
-          )}
+          <Routes>
+            <Route path="/profile-wizard" element={<ProfileCompletionWizard onComplete={handleProfileComplete} onSkip={handleProfileSkip} userEmail={pendingUserEmail} />} />
+            <Route path="/dashboard" element={<UnifiedDashboard onSignOut={handleSignOut} />} />
+            <Route path="/donor-dashboard" element={<Dashboard userRole="donor" onSignOut={handleSignOut} />} />
+            <Route path="/patient-dashboard" element={<Dashboard userRole="patient" onSignOut={handleSignOut} />} />
+            <Route path="/auth" element={<UnifiedAuth onAuthSuccess={handleAuthSuccess} />} />
+            <Route path="/how-it-works" element={<MainLayout><HowItWorksPage /></MainLayout>} />
+            <Route path="/find-donors" element={<MainLayout><FindDonorsPage /></MainLayout>} />
+            <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
+            <Route path="/hospital-directory" element={<MainLayout><HospitalBloodBankDirectory /></MainLayout>} />
+            <Route path="/" element={
+              <MainLayout>
+                <main>
+                  <Hero />
+                  <Features />
+                  <HowItWorks />
+                  <Statistics />
+                  <CallToAction />
+                </main>
+              </MainLayout>
+            } />
+          </Routes>
         </Suspense>
         <Toaster />
       </div>
     </ErrorBoundary>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }

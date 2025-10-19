@@ -1,12 +1,9 @@
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Heart, Users, Smartphone, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
-interface CallToActionProps {
-  onNavigateToRegister?: () => void;
-}
-
-export function CallToAction({ onNavigateToRegister }: CallToActionProps) {
+export function CallToAction() {
   return (
     <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
       <div className="container mx-auto px-4">
@@ -32,12 +29,11 @@ export function CallToAction({ onNavigateToRegister }: CallToActionProps) {
                     <h3 className="font-semibold text-gray-900">Be a Donor</h3>
                     <p className="text-sm text-gray-600">Help save lives in your community</p>
                   </div>
-                  <Button 
-                    className="w-full bg-red-600 hover:bg-red-700"
-                    onClick={onNavigateToRegister}
-                  >
-                    Register as Donor
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button asChild className="w-full bg-red-600 hover:bg-red-700">
+                    <Link to="/auth">
+                      Register as Donor
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -51,13 +47,11 @@ export function CallToAction({ onNavigateToRegister }: CallToActionProps) {
                     <h3 className="font-semibold text-gray-900">Find Blood</h3>
                     <p className="text-sm text-gray-600">Connect with compatible donors</p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
-                    onClick={onNavigateToRegister}
-                  >
-                    Search Now
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button asChild variant="outline" className="w-full border-blue-600 text-blue-600 hover:bg-blue-50">
+                    <Link to="/find-donors">
+                      Search Now
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>

@@ -1,12 +1,8 @@
 import { Button } from "./ui/button";
 import { Heart, Clock, Users, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 
-interface HeroProps {
-  onNavigateToRegister?: () => void;
-  onNavigateToSignIn?: () => void;
-}
-
-export function Hero({ onNavigateToRegister, onNavigateToSignIn }: HeroProps) {
+export function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-red-50 to-pink-50 py-20 lg:py-32">
       <div className="container mx-auto px-4">
@@ -27,22 +23,17 @@ export function Hero({ onNavigateToRegister, onNavigateToSignIn }: HeroProps) {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                size="lg" 
-                className="bg-red-600 hover:bg-red-700 text-white"
-                onClick={onNavigateToRegister}
-              >
-                <Heart className="w-5 h-5 mr-2" />
-                Register as Donor
+              <Button asChild size="lg" className="bg-red-600 hover:bg-red-700 text-white">
+                <Link to="/auth">
+                  <Heart className="w-5 h-5 mr-2" />
+                  Register as Donor
+                </Link>
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-red-600 text-red-600 hover:bg-red-50"
-                onClick={onNavigateToRegister}
-              >
-                <Users className="w-5 h-5 mr-2" />
-                Find Blood
+              <Button asChild variant="outline" size="lg" className="border-red-600 text-red-600 hover:bg-red-50">
+                <Link to="/find-donors">
+                  <Users className="w-5 h-5 mr-2" />
+                  Find Blood
+                </Link>
               </Button>
             </div>
 
@@ -56,13 +47,10 @@ export function Hero({ onNavigateToRegister, onNavigateToSignIn }: HeroProps) {
                   <div>🩺 <strong>Hospital:</strong> hospital@demo.com / Demo123!</div>
                 </div>
                 <div className="text-xs text-blue-600 mt-2">✨ Full platform access • Works offline • No setup required</div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-3 border-blue-600 text-blue-600 hover:bg-blue-50"
-                  onClick={onNavigateToSignIn}
-                >
-                  Try Demo Login →
+                <Button asChild variant="outline" size="sm" className="mt-3 border-blue-600 text-blue-600 hover:bg-blue-50">
+                  <Link to="/auth">
+                    Try Demo Login →
+                  </Link>
                 </Button>
               </div>
             </div>

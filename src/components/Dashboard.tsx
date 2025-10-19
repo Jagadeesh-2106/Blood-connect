@@ -52,11 +52,11 @@ import { ReportingDashboard } from "./ReportingDashboard";
 import { profile } from "../utils/supabase/client";
 import { toast } from "sonner@2.0.3";
 import { notificationService } from "../utils/notificationService";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardProps {
   userRole: 'donor' | 'patient' | 'clinic';
   onSignOut: () => void;
-  onNavigateToHome?: () => void;
 }
 
 interface UserProfile {
@@ -92,12 +92,13 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export function Dashboard({ userRole, onSignOut, onNavigateToHome }: DashboardProps) {
+export function Dashboard({ userRole, onSignOut }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("home");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notificationCount, setNotificationCount] = useState(0);
+  const navigate = useNavigate();
   const notificationPollingRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -277,12 +278,10 @@ export function Dashboard({ userRole, onSignOut, onNavigateToHome }: DashboardPr
                 <span className="text-sm font-semibold">Emergency: 911</span>
               </div>
 
-              {onNavigateToHome && (
-                <Button variant="outline" size="sm" onClick={onNavigateToHome}>
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-              )}
+              <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
 
               <div className="flex items-center gap-2">
                 <Avatar 
@@ -437,16 +436,14 @@ export function Dashboard({ userRole, onSignOut, onNavigateToHome }: DashboardPr
                   <Phone className="w-4 h-4" />
                   <span className="text-sm font-semibold">Emergency: 911</span>
                 </div>
-                {onNavigateToHome && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full mb-2"
-                    onClick={onNavigateToHome}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  className="w-full mb-2"
+                  onClick={() => navigate(-1)}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
                 <Button 
                   variant="outline" 
                   className="w-full border-red-600 text-red-600 hover:bg-red-50"
